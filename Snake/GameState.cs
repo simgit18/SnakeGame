@@ -36,7 +36,7 @@ namespace Snake
 
             for(int c = 0; c < 3; c++) 
             {
-                Grid[r, c] = new GridValue.Snake;
+                Grid[r, c] = GridValue.Snake;
                 snakePositions.AddFirst(new Position(r, c));
             }
         }
@@ -81,7 +81,7 @@ namespace Snake
 
         public IEnumerable<Position> SnakePositions()
         {
-            retirn snakePositions;
+            return snakePositions;
         }
 
         private void AddHead(Position pos)
@@ -90,18 +90,50 @@ namespace Snake
             Grid[pos.Row, pos.Col] = GridValue.Snake;
         }
 
-        private void RemoveTail(Position pos)
+        private void RemoveTail()
         {
             Position tail = snakePositions.Last.Value;
             Grid[tail.Row, tail.Col] = GridValue.Empty;
             snakePositions.RemoveLast();
         }
 
-        private void ChangeDirection(Direction dir)
+        public void ChangeDirection(Direction dir)
         {
             Dir = dir;
         }
 
+        private bool OutsideGrid(Position pos)
+        {
+            return pos.Row < 0 || pos.Col < 0 || pos.Row >= Rows || pos.Col >= Cols;
+        }
 
+        private GridValue WillHit(Position newHeadPos)
+        {
+            if (OutsideGrid(newHeadPos)) return GridValue.Outside;
+            if (newHeadPos == TailPosition()) return GridValue.Empty;
+            return Grid[newHeadPos.Row, newHeadPos.Col];
+        }
+
+        public void Move()
+        {
+            Position newHeadPos = HeadPosition().Translate(Dir);
+            GridValue hit = WillHit(newHeadPos);
+            if (hit == GridValue.Outside || hit == GridValue.Snake) 
+            {
+                GameOver=true;
+            }
+            else if(hit == GridValue.Empty)
+            {
+                RemoveTail();
+                AddHead(newHeadPos);
+            }
+
+            else if(hit == GridValue.Food)
+            {
+                AddHead(newHeadPos);
+                Score++;
+                AddFood();
+            }
+        }
     }
 }
